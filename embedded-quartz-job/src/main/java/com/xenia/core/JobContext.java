@@ -1,5 +1,6 @@
 package com.xenia.core;
 
+import com.xenia.core.job.ShardJob;
 import com.xenia.core.po.JobEntity;
 import com.xenia.core.repo.BaseRepo;
 import lombok.Getter;
@@ -84,7 +85,7 @@ public class JobContext {
             try {
                 jobEntity.setParams(params);
                 jobEntity.setCron(cron);
-                jobEntity.setClazz(Class.forName(clazz));
+                jobEntity.setClazz((Class<? extends Job>) Class.forName(clazz));
                 jobEntity.setStatus(JobEntity.Status.NORMAL);
                 this.repo.updateJobEntity(jobEntity);
                 scheduler.deleteJob(JobKey.jobKey(jobName, jobGroup));
@@ -92,7 +93,7 @@ public class JobContext {
             } catch (ClassNotFoundException | SchedulerException e) {
                 throw new RuntimeException(e);
             }
-        }, () -> {new RuntimeException("");});
+        }, () -> {throw new RuntimeException("error");});
     }
 
     public void deleteJob(String jobName, String jobGroup) {
@@ -114,13 +115,17 @@ public class JobContext {
         CronTrigger cronTrigger = TriggerBuilder.newTrigger()
                 .withIdentity(
                         jobEntity.getName()+"_trigger",
-                        jobEntity.getGroup()+"_trigger-group")
+                        jobEntity.getGroup()+"_trigger-group"
+                )
                 .withSchedule(CronScheduleBuilder.cronSchedule(jobEntity.getCron()))
                 .build();
+        JobDataMap jobDataMap = new JobDataMap(jobEntity.getParams());
+        jobDataMap.put("jobMeta", jobEntity);
+        jobDataMap.put("jobContext", this);
         JobDetail jobDetail = JobBuilder.newJob()
                 .withIdentity(jobEntity.getName(), jobEntity.getGroup())
-                .ofType(jobEntity.getClazz())
-                .usingJobData(new JobDataMap(jobEntity.getParams()))
+                .ofType(ShardJob.class)
+                .usingJobData(jobDataMap)
                 .build();
         try {
             this.scheduler.scheduleJob(jobDetail, cronTrigger);

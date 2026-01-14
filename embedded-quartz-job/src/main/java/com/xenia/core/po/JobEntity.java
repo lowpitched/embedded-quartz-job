@@ -1,6 +1,5 @@
 package com.xenia.core.po;
 
-import liquibase.change.Change;
 import lombok.*;
 import org.quartz.Job;
 
@@ -9,20 +8,27 @@ import java.util.Map;
 @AllArgsConstructor
 @Builder
 @Getter
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @ToString
-public class JobEntity {
+@Setter
+public class JobEntity extends BaseEntity{
 
     private String name;
 
     private String group;
-    @Setter
-    private Class clazz;
-    @Setter
+
+    private Class<? extends Job> clazz;
+
     private String cron;
-    @Setter
+
     private Status status;
-    @Setter
+
+    private String description;
+
+    private String currentInstance;
+
+    private Integer totalShards;
+
     private Map<String, Object> params;
 
     public enum Status {
