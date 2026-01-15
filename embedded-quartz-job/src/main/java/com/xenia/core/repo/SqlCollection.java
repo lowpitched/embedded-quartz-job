@@ -28,7 +28,7 @@ public class SqlCollection {
 
     private final String tablePrefix;
 
-    private final List<String> jobEntityColumns = BaseEntity.getColumnNames(JobEntity.class);
+    private final List<String> jobEntityColumns = BaseEntity.getColumnNameToField(JobEntity.class).keySet().stream().toList();
 
     public SqlCollection(String tablePrefix) {
         this.tablePrefix = tablePrefix;

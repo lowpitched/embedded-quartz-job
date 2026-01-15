@@ -85,12 +85,12 @@ public class JobContext {
             try {
                 jobEntity.setParams(params);
                 jobEntity.setCron(cron);
-                jobEntity.setClazz((Class<? extends Job>) Class.forName(clazz));
+                jobEntity.setClazz(clazz);
                 jobEntity.setStatus(JobEntity.Status.NORMAL);
                 this.repo.updateJobEntity(jobEntity);
                 scheduler.deleteJob(JobKey.jobKey(jobName, jobGroup));
                 scheduleJob(jobEntity);
-            } catch (ClassNotFoundException | SchedulerException e) {
+            } catch (SchedulerException e) {
                 throw new RuntimeException(e);
             }
         }, () -> {throw new RuntimeException("error");});
@@ -115,7 +115,7 @@ public class JobContext {
         CronTrigger cronTrigger = TriggerBuilder.newTrigger()
                 .withIdentity(
                         jobEntity.getName()+"_trigger",
-                        jobEntity.getGroup()+"_trigger-group"
+                        jobEntity.getGroupName()+"_trigger-group"
                 )
                 .withSchedule(CronScheduleBuilder.cronSchedule(jobEntity.getCron()))
                 .build();
@@ -123,7 +123,7 @@ public class JobContext {
         jobDataMap.put("jobMeta", jobEntity);
         jobDataMap.put("jobContext", this);
         JobDetail jobDetail = JobBuilder.newJob()
-                .withIdentity(jobEntity.getName(), jobEntity.getGroup())
+                .withIdentity(jobEntity.getName(), jobEntity.getGroupName())
                 .ofType(ShardJob.class)
                 .usingJobData(jobDataMap)
                 .build();

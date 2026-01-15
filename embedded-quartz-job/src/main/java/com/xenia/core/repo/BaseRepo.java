@@ -2,16 +2,16 @@ package com.xenia.core.repo;
 
 import com.xenia.core.po.BaseEntity;
 import com.xenia.core.po.JobEntity;
+import com.xenia.util.JsonUtil;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.Date;
 
 public class BaseRepo {
 
@@ -48,8 +48,8 @@ public class BaseRepo {
                          sqlCollection.getSqlUpdateJobEntity()
                  );
             ) {
-                List<Object> values = JobEntity.getColumnValues(jobEntity);
-                values.addAll(List.of(jobEntity.getName(), jobEntity.getGroup()));
+                List<Object> values = JobEntity.getEntityValues(jobEntity);
+                values.addAll(List.of(jobEntity.getName(), jobEntity.getGroupName()));
                 values.forEach(value -> {
                     try {
                         ps.setObject(values.indexOf(value) + 1, value);
@@ -90,7 +90,7 @@ public class BaseRepo {
                      sqlCollection.getSqlInsertJobEntity()
              );
         ) {
-            List<Object> values = JobEntity.getColumnValues(jobEntity);
+            List<Object> values = JobEntity.getEntityValues(jobEntity);
             for (Object value : values) {
                 ps.setObject(values.indexOf(value) + 1, value);
             }
@@ -114,12 +114,53 @@ public class BaseRepo {
 
     private <T extends BaseEntity> T mapToEntity(ResultSet rs, Class<T> clazz) throws Exception {
         T entity = clazz.getConstructor().newInstance();
-        List<String> columnNames = entity.getColumnNames();
-        for (String columnName : columnNames) {
-            Object value = rs.getObject(columnName);
-            Field field = entity.getClass().getField(columnName);
-            field.setAccessible(true);
-            field.set(entity, value);
+        LinkedHashMap<String, Field> columnFields = entity.getColumnNameToField();
+        for (Map.Entry<String, Field> columnField : columnFields.entrySet()) {
+            Object value = rs.getObject(columnField.getKey());
+            columnField.getValue().setAccessible(true);
+            if (value == null) {
+                continue;
+            }
+            if (columnField.getValue().getType().isEnum()) {
+                columnField.getValue().set(
+                        entity,
+                        Enum.valueOf(
+                                (Class<? extends Enum>) columnField.getValue().getType(),
+                                value.toString())
+                );
+            } else if (columnField.getValue().getType().isAssignableFrom(LocalDateTime.class)) {
+                columnField.getValue().set(entity, rs.getTimestamp(columnField.getKey()).toLocalDateTime());
+            } else if (columnField.getValue().getType().isAssignableFrom(String.class)) {
+                columnField.getValue().set(entity, value.toString());
+            } else if (columnField.getValue().getType().isAssignableFrom(Integer.class)) {
+                columnField.getValue().set(entity, rs.getInt(columnField.getKey()));
+            } else if (columnField.getValue().getType().isAssignableFrom(Long.class)) {
+                columnField.getValue().set(entity, rs.getLong(columnField.getKey()));
+            } else if (columnField.getValue().getType().isAssignableFrom(Boolean.class)) {
+                columnField.getValue().set(entity, rs.getBoolean(columnField.getKey()));
+            } else if (columnField.getValue().getType().isAssignableFrom(Double.class)) {
+                columnField.getValue().set(entity, rs.getDouble(columnField.getKey()));
+            } else if (columnField.getValue().getType().isAssignableFrom(Float.class)) {
+                columnField.getValue().set(entity, rs.getFloat(columnField.getKey()));
+            } else if (columnField.getValue().getType().isAssignableFrom(Byte.class)) {
+                columnField.getValue().set(entity, rs.getByte(columnField.getKey()));
+            } else if (columnField.getValue().getType().isAssignableFrom(Short.class)) {
+                columnField.getValue().set(entity, rs.getShort(columnField.getKey()));
+            } else if (columnField.getValue().getType().isAssignableFrom(BigDecimal.class)) {
+                columnField.getValue().set(entity, rs.getBigDecimal(columnField.getKey()));
+            } else if (columnField.getValue().getType().isAssignableFrom(BigInteger.class)) {
+                columnField.getValue().set(entity, rs.getBigDecimal(columnField.getKey()).toBigInteger());
+            } else if (columnField.getValue().getType().isAssignableFrom(Date.class)) {
+                columnField.getValue().set(entity, rs.getDate(columnField.getKey()));
+            } else if (columnField.getValue().getType().isAssignableFrom(Time.class)) {
+                columnField.getValue().set(entity, rs.getTime(columnField.getKey()));
+            } else if (columnField.getValue().getType().isAssignableFrom(Timestamp.class)) {
+                columnField.getValue().set(entity, rs.getTimestamp(columnField.getKey()));
+            } else if (columnField.getValue().getType().isAssignableFrom(Map.class)) {
+                columnField.getValue().set(entity, JsonUtil.fromJson(rs.getString(columnField.getKey()), Map.class));
+            } else {
+                throw new RuntimeException("Unsupported type: " + columnField.getValue().getType());
+            }
         }
         return entity;
     }

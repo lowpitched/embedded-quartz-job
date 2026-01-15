@@ -1,7 +1,6 @@
 package com.xenia.core.po;
 
 import lombok.*;
-import org.quartz.Job;
 
 import java.util.Map;
 
@@ -11,24 +10,35 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter
+@NoArgsConstructor
 public class JobEntity extends BaseEntity{
 
+    @Column("name")
     private String name;
 
-    private String group;
+    @Column("group_name")
+    private String groupName;
 
-    private Class<? extends Job> clazz;
+    @Column("clazz")
+    private String clazz;
 
+    @Column("cron")
     private String cron;
 
+    @Enum
+    @Column("status")
     private Status status;
 
+    @Column("description")
     private String description;
 
+    @Column("current_instance")
     private String currentInstance;
 
+    @Column("total_shards")
     private Integer totalShards;
 
+    @Column("params")
     private Map<String, Object> params;
 
     public enum Status {
