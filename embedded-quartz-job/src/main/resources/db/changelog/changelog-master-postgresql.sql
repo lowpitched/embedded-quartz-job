@@ -11,7 +11,9 @@ CREATE TABLE job (
     cron VARCHAR(100) NOT NULL,
     status VARCHAR(20) DEFAULT 'NORMAL',
     description TEXT,
-    current_instance VARCHAR(255) default "0",
+    current_instance VARCHAR(255) default '0',
+    fire_time TIMESTAMP WITH TIME ZONE,
+    expire_seconds INTEGER DEFAULT 86400,
     total_shards INTEGER DEFAULT 1,
     params JSONB,
     created_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -36,3 +38,17 @@ CREATE TABLE job_shard (
     updated_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT job_shard_unique_index UNIQUE (job_id, instance_id, shard_index)
 )
+
+--changeset system:create-job_instance
+CREATE TABLE job_instance (
+    id BIGSERIAL PRIMARY KEY,
+    job_id BIGINT NOT NULL,
+    instance_id VARCHAR(255) NOT NULL,
+    status VARCHAR(20) DEFAULT 'WAITING',
+    error_message varchar(1000),
+    start_time TIMESTAMP WITH TIME ZONE,
+    end_time TIMESTAMP WITH TIME ZONE,
+    created_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+)
+

@@ -64,8 +64,21 @@ public class JobEntityRepo {
     }
 
     public int updateJobInstance(String jobName, String groupName, String instanceId, String oldInstanceId) {
+        String sql = """
+                update
+                	%sjob
+                set
+                	current_instance =?,
+                	fire_time = now()
+                where
+                	name =?
+                	and group_name =?
+                	and (current_instance =?
+                		or (fire_time is null
+                			or fire_time + interval '1 second' * expire_seconds < now()))
+                """;
         return jdbcTemplate.update(
-                sqlCollection.getSqlUpdateJobInstanceIfisBlank(),
+                String.format(sql, tablePrefix),
                 instanceId,
                 jobName,
                 groupName,

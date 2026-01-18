@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import com.xenia.config.PrimaryThreadPool;
 import com.xenia.core.entity.JobEntity;
 import com.xenia.core.entity.JobShardEntity;
-import com.xenia.core.job.EJobContext;
+import com.xenia.core.job.EmJobContext;
 import com.xenia.core.job.EmJob;
 import com.xenia.core.repo.JobEntityRepo;
 import com.xenia.core.repo.JobShardEntityRepo;
@@ -58,8 +58,8 @@ public class ShardJob implements Job {
                     () -> {
                         try {
                             EmJob job = (EmJob) Class.forName(jobEntity.getClazz()).getConstructor().newInstance();
-                            EJobContext eJobContext = new EJobContext(context, totalShards, finalI);
-                            job.execute(eJobContext);
+                            EmJobContext emJobContext = new EmJobContext(context, totalShards, finalI);
+                            job.execute(emJobContext);
                             jobShardRepo.updateJobShardEntityStatus(
                                     jobShardEntity.getId(),
                                     JobShardEntity.Status.COMPLETED.name(),
@@ -131,16 +131,20 @@ public class ShardJob implements Job {
     }
 
     private void updateInstance(JobEntity jobEntity, String instanceId) {
-        int result = jobRepo.updateJobInstance(jobEntity.getName(), jobEntity.getGroupName(), instanceId, "0");
+        int result = jobRepo.updateJobInstance(jobEntity.getName(),
+                jobEntity.getGroupName(), instanceId, "0");
         if (result == 0) {
-            JobEntity entity = jobRepo.getJobEntity(jobEntity.getName(), jobEntity.getGroupName()).orElseThrow(
-                    () -> new RuntimeException("job " + jobEntity.getName() + " group " + jobEntity.getGroupName() + " has been deleted")
-            );
+            JobEntity entity = jobRepo.getJobEntity(
+                    jobEntity.getName(),
+                    jobEntity.getGroupName())
+                    .orElseThrow(() -> new RuntimeException(String.format(
+                            "job %s group %s has been deleted",
+                            jobEntity.getName(),
+                            jobEntity.getGroupName())));
             jobEntity.setCurrentInstance(entity.getCurrentInstance());
         } else {
             jobEntity.setCurrentInstance(instanceId);
         }
-        System.out.println("job instance被更新为：" + jobEntity.getCurrentInstance());
     }
 
     private List<Integer> generateRandomizedShardIndices(int totalShards) {

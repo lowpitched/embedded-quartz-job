@@ -4,6 +4,6 @@ import org.quartz.JobExecutionException;
 
 public interface EmJob {
 
-    void execute(EJobContext context) throws JobExecutionException;
+    void execute(EmJobContext context) throws JobExecutionException;
 
 }

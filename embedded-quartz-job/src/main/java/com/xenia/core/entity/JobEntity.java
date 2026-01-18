@@ -3,6 +3,7 @@ package com.xenia.core.entity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @AllArgsConstructor
@@ -36,11 +37,15 @@ public class JobEntity extends BaseEntity{
     @Column("current_instance")
     private String currentInstance;
 
+    private LocalDateTime fireTime;
+
     @Column("total_shards")
     private Integer totalShards;
 
     @Column("params")
     private Map<String, Object> params;
+
+    private Long expireSeconds;
 
     public enum Status {
         NORMAL, PAUSED, COMPLETE, ERROR, BLOCKED;

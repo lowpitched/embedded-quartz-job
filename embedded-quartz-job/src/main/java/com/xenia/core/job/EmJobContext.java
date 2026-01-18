@@ -8,7 +8,7 @@ import org.quartz.JobExecutionContext;
 @Getter
 @Setter
 @AllArgsConstructor
-public class EJobContext {
+public class EmJobContext {
 
     private JobExecutionContext context;
     private int totalShard;

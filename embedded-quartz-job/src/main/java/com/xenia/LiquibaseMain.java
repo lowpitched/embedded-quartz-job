@@ -16,7 +16,7 @@ public class LiquibaseMain {
                 new JdbcConnection(getConnection(args).getConnection())
         );
         Liquibase liquibase = new Liquibase(
-                "db/changelog/changelog-master.sql",
+                "db/changelog/changelog-master-postgresql.sql",
                 new ClassLoaderResourceAccessor(
                         LiquibaseMain.class.getClassLoader()
                 ),

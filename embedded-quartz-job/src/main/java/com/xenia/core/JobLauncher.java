@@ -27,8 +27,7 @@ public class JobLauncher {
 
     private JobLauncher() {}
 
-    public static JobLauncher instance(Config config)
-            throws SchedulerException {
+    public static JobLauncher instance(Config config) throws SchedulerException {
         JobLauncher context = new JobLauncher();
         context.config = config;
         context.checkConfig();

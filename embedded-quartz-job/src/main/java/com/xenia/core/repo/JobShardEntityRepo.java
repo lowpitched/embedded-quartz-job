@@ -5,7 +5,6 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
-import java.time.LocalDateTime;
 
 public class JobShardEntityRepo {
 
@@ -26,45 +25,44 @@ public class JobShardEntityRepo {
     public void insertJobShardEntity(JobShardEntity jobShardEntity) {
         jdbcTemplate.update(
                 sqlCollection.getSqlInsertJobShardEntity(),
-                JobShardEntity.getEntityValues(jobShardEntity).toArray());
+                JobShardEntity.getEntityValues(jobShardEntity).toArray()
+        );
     }
 
     public void updateJobShardEntityStatus(Long id, String status, String oldStatus) {
+        String sql = """
+                update %sjob_shard set status=?, end_time=now() where id=? and status=?
+                """;
         jdbcTemplate.update(
-                sqlCollection.updateJobShardEntityStatus(),
-                status, id, oldStatus);
+                String.format(sql, tablePrefix),
+                status,
+                id,
+                oldStatus
+        );
     }
 
     public JobShardEntity getJobShardEntity(Long jobId, String instanceId, Integer shardIndex) {
-       /* return jdbcTemplate.queryForObject(
-                "select * from job_shard where job_id=? and instance_id=? and shard_index=?",
-                (rs, rowNum) -> JobShardEntity.builder()
-                        .id(rs.getLong("id"))
-                        .jobId(rs.getLong("job_id"))
-                        .instanceId(rs.getString("instance_id"))
-                        .shardIndex(rs.getInt("shard_index"))
-                        .status(rs.getString("status"))
-                        .startTime(toLocalDateTime(rs.getTimestamp("start_time")))
-                        .endTime(toLocalDateTime(rs.getTimestamp("end_time")))
-                        .build(), jobId, instanceId, shardIndex);*/
+        String sql = """
+                select * from %sjob_shard where job_id=? and instance_id=? and shard_index=?
+                """;
         return jdbcTemplate.queryForObject(
-                "select * from job_shard where job_id=? and instance_id=? and shard_index=?",
+                String.format(sql, tablePrefix),
                 rowMapper,
-                jobId, instanceId, shardIndex);
-    }
-
-    private LocalDateTime toLocalDateTime(java.sql.Timestamp timestamp) {
-        if (timestamp == null) {
-            return null;
-        }
-        return timestamp.toLocalDateTime();
+                jobId,
+                instanceId,
+                shardIndex
+        );
     }
 
     public JobShardEntity getJobShardEntityById(Long id) {
+        String sql = """
+                select * from %sjob_shard where id=?
+                """;
         return jdbcTemplate.queryForObject(
-                sqlCollection.getSqlGetJobShardEntityById(),
+                String.format(sql, tablePrefix),
                 rowMapper,
-                id);
+                id
+        );
     }
 
 

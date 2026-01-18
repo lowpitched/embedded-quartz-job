@@ -10,7 +10,7 @@ public class SampleEmJob implements EmJob{
 
     private Logger logger = Logger.getLogger(SampleEmJob.class.getName());
     @Override
-    public void execute(EJobContext context) throws JobExecutionException {
+    public void execute(EmJobContext context) throws JobExecutionException {
         logger.info(String.format("""
                         ================================
                         this is a test embedded job
