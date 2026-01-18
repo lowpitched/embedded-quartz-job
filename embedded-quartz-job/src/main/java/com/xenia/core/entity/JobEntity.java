@@ -1,11 +1,12 @@
-package com.xenia.core.po;
+package com.xenia.core.entity;
 
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.Map;
 
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @ToString

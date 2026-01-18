@@ -1,7 +1,8 @@
 package com.xenia.core.repo;
 
-import com.xenia.core.po.BaseEntity;
-import com.xenia.core.po.JobEntity;
+import com.xenia.core.entity.BaseEntity;
+import com.xenia.core.entity.JobEntity;
+import com.xenia.core.entity.JobShardEntity;
 
 import java.util.List;
 
@@ -11,7 +12,7 @@ public class SqlCollection {
             SELECT %s FROM %s
             """;
     static final String SQL_UPDATE_ENTITY_TEMPLATE = """
-            update %s set %s where name=? and group=?
+            update %s set %s where name=? and group_name=?
             """;
 
     static final String SQL_INSERT_ENTITY_TEMPLATE = """
@@ -19,11 +20,27 @@ public class SqlCollection {
             """;
 
     static final String SQL_DELETE_ENTITY_TEMPLATE = """
-            delete from %s where name=? and group=?
+            delete from %s where name=? and group_name=?
             """;
 
     static final String SQL_GET_ENTITY_TEMPLATE = """
-            SELECT %s FROM %s where name=? and group=?
+            SELECT %s FROM %s where name=? and group_name=?
+            """;
+
+    static final String SQL_GET_JOB_SHARD_ENTITY_TEMPLATE = """
+            SELECT %s FROM %s where job_id=? and instance_id=? and shard_index=?
+            """;
+
+    static final String SQL_GET_BY_ID_TEMPLATE = """
+            SELECT %s FROM %s where id=?
+            """;
+
+    static final String SQL_UPDATE_JOB_INSTANCE_IF_IS_BLANK_TEMPLATE = """
+            update %s set current_instance=? where name=? and group_name=? and current_instance =?
+            """;
+
+    static final String SQL_UPDATE_STATUS_TEMPLATE = """
+            update %s set status=? where id=? and status=?
             """;
 
     private final String tablePrefix;
@@ -72,5 +89,42 @@ public class SqlCollection {
         );
     }
 
+    public String getSqlUpdateJobInstanceIfisBlank() {
+        return String.format(
+                SQL_UPDATE_JOB_INSTANCE_IF_IS_BLANK_TEMPLATE,
+                tablePrefix + "job"
+        );
+    }
 
+    public String getSqlInsertJobShardEntity() {
+        return String.format(
+                SQL_INSERT_ENTITY_TEMPLATE,
+                tablePrefix + "job_shard",
+                String.join(", ", JobShardEntity.getColumnNameToField(JobShardEntity.class).keySet()),
+                String.join(", ", JobShardEntity.getColumnNameToField(JobShardEntity.class).keySet().stream().map(column -> "?").toList())
+        );
+    }
+
+    public String updateJobShardEntityStatus() {
+        return String.format(
+                SQL_UPDATE_STATUS_TEMPLATE,
+                tablePrefix + "job_shard"
+        );
+    }
+
+    public String getSqlGetJobShardEntity() {
+        return String.format(
+                SQL_GET_JOB_SHARD_ENTITY_TEMPLATE,
+                String.join(", ", JobShardEntity.getColumnNameToField(JobShardEntity.class).keySet()),
+                tablePrefix + "job_shard"
+        );
+    }
+
+    public String getSqlGetJobShardEntityById() {
+        return String.format(
+                SQL_GET_BY_ID_TEMPLATE,
+                String.join(", ", JobShardEntity.getColumnNameToField(JobShardEntity.class).keySet()),
+                tablePrefix + "job_shard"
+        );
+    }
 }

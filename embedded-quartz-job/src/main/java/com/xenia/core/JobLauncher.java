@@ -1,8 +1,7 @@
 package com.xenia.core;
 
-import com.xenia.core.job.ShardJob;
-import com.xenia.core.po.JobEntity;
-import com.xenia.core.repo.BaseRepo;
+import com.xenia.core.entity.JobEntity;
+import com.xenia.core.repo.JobEntityRepo;
 import lombok.Getter;
 import lombok.Setter;
 import org.quartz.*;
@@ -14,7 +13,9 @@ import java.util.Objects;
 
 @Getter
 @Setter
-public class JobContext {
+public class JobLauncher {
+
+    public static final String JOB_CONTEXT = "jobContext";
 
     private List<JobEntity> jobEntities;
 
@@ -22,16 +23,16 @@ public class JobContext {
 
     private Config config;
 
-    private BaseRepo repo;
+    private JobEntityRepo repo;
 
-    private JobContext() {}
+    private JobLauncher() {}
 
-    public static JobContext instance(Config config)
+    public static JobLauncher instance(Config config)
             throws SchedulerException {
-        JobContext context = new JobContext();
+        JobLauncher context = new JobLauncher();
         context.config = config;
         context.checkConfig();
-        context.repo = new BaseRepo(config.getDataSource(), config.getTablePrefix());
+        context.repo = new JobEntityRepo(config.getDataSource(), config.getTablePrefix());
         context.scheduler = StdSchedulerFactory.getDefaultScheduler();
         context.jobEntities = context.repo.getJobEntities();
         context.contextPreProcess();
@@ -51,7 +52,7 @@ public class JobContext {
     }
 
     public void addJob(JobEntity jobEntity) {
-        this.repo.addJobEntity(jobEntity);
+        this.repo.insertJobEntity(jobEntity);
         scheduleJob(jobEntity);
     }
 

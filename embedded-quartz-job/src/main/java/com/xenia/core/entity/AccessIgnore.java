@@ -1,4 +1,4 @@
-package com.xenia.core.po;
+package com.xenia.core.entity;
 
 import java.lang.annotation.*;
 

@@ -1,7 +1,11 @@
-package com.xenia.core.po;
+package com.xenia.core.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
@@ -11,24 +15,28 @@ import java.util.List;
 
 @Getter
 @Setter
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 public class BaseEntity {
 
-    @Column("created_at")
-    private LocalDateTime createdAt;
+    @AccessIgnore
+    private Long id;
 
-    @Column("updated_at")
-    private LocalDateTime updatedAt;
+    private LocalDateTime createdTime;
 
-    @Column("created_by")
-    private String createdBy;
+    private LocalDateTime updatedTime;
 
-    @Column("updated_by")
-    private String updatedBy;
+    /*private String createdBy;
+
+    private String updatedBy;*/
 
     @AccessIgnore
-    private List< Field> columnNames = getEntityFields(this.getClass());
+    @JsonIgnore
+    private List<Field> columnNames = getEntityFields(this.getClass());
 
     @AccessIgnore
+    @JsonIgnore
     private LinkedHashMap<String, Field> columnNameToField = getColumnNameToField(this.getClass());
 
     public static <T> LinkedHashMap<String, Field> getColumnNameToField(Class<T> clazz) {
@@ -77,18 +85,18 @@ public class BaseEntity {
     }
 
     private static <T> void recursiveGetEntityColumns(LinkedHashSet<Field> columns, Class<T> clazz) {
-        if (clazz.getSuperclass() != Object.class) {
-            Field[] declaredFields = clazz.getDeclaredFields();
-            for (Field declaredField : declaredFields) {
-                declaredField.setAccessible(true);
-                if (declaredField.isAnnotationPresent(AccessIgnore.class)) {
-                    continue;
-                }
-                columns.add(declaredField);
-            }
-            recursiveGetEntityColumns(columns, clazz.getSuperclass());
+        if (clazz == Object.class) {
+            return;
         }
-
+        Field[] declaredFields = clazz.getDeclaredFields();
+        for (Field declaredField : declaredFields) {
+            declaredField.setAccessible(true);
+            if (declaredField.isAnnotationPresent(AccessIgnore.class)) {
+                continue;
+            }
+            columns.add(declaredField);
+        }
+        recursiveGetEntityColumns(columns, clazz.getSuperclass());
     }
 
 }

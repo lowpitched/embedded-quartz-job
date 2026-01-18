@@ -1,17 +1,22 @@
 package com.xenia.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-public class JsonUtil {
+public class JsonUtils {
 
-    private final static ObjectMapper objectMapper = new ObjectMapper();
+    public final static ObjectMapper OBJECTMAPPER = new ObjectMapper();
+
+    static {
+        OBJECTMAPPER.registerModule(new JavaTimeModule());
+    }
 
     public static String toJson(Object object) {
         try {
             if (object == null) {
                 return null;
             }
-            return objectMapper.writeValueAsString(object);
+            return OBJECTMAPPER.writeValueAsString(object);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -22,7 +27,7 @@ public class JsonUtil {
             if (json == null || json.isEmpty()) {
                 return null;
             }
-            return objectMapper.readValue(json, clazz);
+            return OBJECTMAPPER.readValue(json, clazz);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
